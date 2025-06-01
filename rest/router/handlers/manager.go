@@ -16,7 +16,12 @@ type HandlersManager struct {
 }
 
 func NewManager() (*HandlersManager, error) {
-	minioClient, err := myminio.New()
+	minioClient, err := myminio.New(myminio.Config{
+		URL:       "minio:9000",
+		AccessKey: "admin",
+		SecretKey: "password",
+		UseSSL:    false,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("minio.New:%w", err)
 	}
@@ -26,7 +31,7 @@ func NewManager() (*HandlersManager, error) {
 
 	err = minioClient.SetupBucket(ctx, "images", minio.MakeBucketOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("minioClient.SetupBucket:w", err)
+		return nil, fmt.Errorf("minioClient.SetupBucket: %w", err)
 	}
 
 	return &HandlersManager{minioClient: minioClient}, nil

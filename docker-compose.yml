@@ -13,8 +13,15 @@ services:
     volumes:
       - minio-data:/data
     ports:
-      - 9000:9000
       - 9001:9001
+
+  rest:
+    build: .
+    networks:
+      - dev
+    ports:
+      - 8080:8080
+  
 
 volumes:
   minio-data:
