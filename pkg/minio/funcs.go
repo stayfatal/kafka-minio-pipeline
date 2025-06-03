@@ -15,25 +15,34 @@ type Object struct {
 	File        io.Reader
 }
 
-func (mc *Client) SetupBucket(ctx context.Context, bucketName string, ops minio.MakeBucketOptions) error {
-	ok, err := mc.conn.BucketExists(ctx, bucketName)
+func (c *Client) SetupBucket(ctx context.Context, bucketName string, ops minio.MakeBucketOptions) error {
+	ok, err := c.conn.BucketExists(ctx, bucketName)
 	if err != nil {
 		return fmt.Errorf("mc.conn.BucketExists:%w", err)
 	}
 
 	if !ok {
-		mc.conn.MakeBucket(ctx, bucketName, ops)
+		c.conn.MakeBucket(ctx, bucketName, ops)
 	}
 
 	return nil
 }
 
-func (mc *Client) Upload(ctx context.Context, bucketName string, object Object, ops minio.PutObjectOptions) (minio.UploadInfo, error) {
+func (c *Client) Upload(ctx context.Context, bucketName string, object Object, ops minio.PutObjectOptions) (minio.UploadInfo, error) {
 	ops.ContentType = object.ContentType
-	info, err := mc.conn.PutObject(ctx, bucketName, object.Name, object.File, object.Size, ops)
+	info, err := c.conn.PutObject(ctx, bucketName, object.Name, object.File, object.Size, ops)
 	if err != nil {
 		return minio.UploadInfo{}, fmt.Errorf("mc.conn.PutObject:%w", err)
 	}
 
 	return info, nil
+}
+
+func (c *Client) Download(ctx context.Context, bucketName string, objectName string, ops minio.GetObjectOptions) (*Object, error) {
+	obj, err := c.conn.GetObject(ctx, bucketName, objectName, ops)
+	if err != nil {
+		return nil, fmt.Errorf("c.conn.GetObject: %w", err)
+	}
+
+	return &Object{Name: objectName, File: obj}, nil
 }

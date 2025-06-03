@@ -8,11 +8,13 @@ import (
 	"time"
 
 	"github.com/minio/minio-go/v7"
+	"github.com/stayfatal/kafka-minio-pipeline/pkg/kafka/producer"
 	myminio "github.com/stayfatal/kafka-minio-pipeline/pkg/minio"
 )
 
 type HandlersManager struct {
-	minioClient *myminio.Client
+	minioClient   *myminio.Client
+	kafkaProducer *producer.Producer
 }
 
 func NewManager() (*HandlersManager, error) {
@@ -34,7 +36,14 @@ func NewManager() (*HandlersManager, error) {
 		return nil, fmt.Errorf("minioClient.SetupBucket: %w", err)
 	}
 
-	return &HandlersManager{minioClient: minioClient}, nil
+	producer, err := producer.New(&producer.Config{
+		Brokers: []string{"kafka-1:19092", "kafka-2:19092", "kafka-3:19092"},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("producer.New: %w", err)
+	}
+
+	return &HandlersManager{minioClient: minioClient, kafkaProducer: producer}, nil
 }
 
 func httpErr(w http.ResponseWriter, err error, code int) {
